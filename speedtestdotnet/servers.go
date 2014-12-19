@@ -28,6 +28,8 @@ type Testserver struct {
 	Long     float64
 	Distance float64 //distance from server in KM
 	URLs     []string
+	Host     string
+	Latency  time.Duration //latency in ms
 }
 type testServerlist []Testserver
 
@@ -174,6 +176,7 @@ func populateServers(cfg *Config, srvs []server, ignore map[uint]bool) error {
 			Country: srvs[i].Country,
 			Lat:     srvs[i].Lat,
 			Long:    srvs[i].Long,
+			Host:    srvs[i].Host,
 		}
 		if srvs[i].Url != "" {
 			srv.URLs = append(srv.URLs, srvs[i].Url)
