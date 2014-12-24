@@ -129,11 +129,16 @@ func testDownstream(server stdn.Testserver) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s\n", stdn.HumanSpeed(bps))
+	fmt.Printf("Download: %s\n", stdn.HumanSpeed(bps))
 	return nil
 }
 
 func testUpstream(server stdn.Testserver) error {
+	bps, err := server.Upstream()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Upload:   %s\n", stdn.HumanSpeed(bps))
 	return nil
 }
 
