@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -20,6 +21,18 @@ const (
 	basePingCount    = 5
 	fullTestCount    = 20
 )
+
+var (
+	speedtestDuration = flag.Int("t", 3, "Target duration for speedtests (in seconds)")
+)
+
+func init() {
+	flag.Parse()
+	if *speedtestDuration <= 0 {
+		fmt.Fprintf(os.Stderr, "Invalid test duration")
+		os.Exit(-1)
+	}
+}
 
 func main() {
 	cfg, err := stdn.GetConfig()
@@ -125,7 +138,7 @@ func testLatency(server stdn.Testserver) error {
 }
 
 func testDownstream(server stdn.Testserver) error {
-	bps, err := server.Downstream()
+	bps, err := server.Downstream(*speedtestDuration)
 	if err != nil {
 		return err
 	}
@@ -134,7 +147,7 @@ func testDownstream(server stdn.Testserver) error {
 }
 
 func testUpstream(server stdn.Testserver) error {
-	bps, err := server.Upstream()
+	bps, err := server.Upstream(*speedtestDuration)
 	if err != nil {
 		return err
 	}

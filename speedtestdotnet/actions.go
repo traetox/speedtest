@@ -24,7 +24,6 @@ var (
 	errInvalidServerResponse = errors.New("Invalid server response")
 	errPingFailure           = errors.New("Failed to complete ping test")
 	errDontBeADick           = errors.New("requested ping count too high")
-	targetTestDuration       = time.Second * 3
 	startBlockSize           = uint64(4096) //4KB
 	dataBlock                []byte
 )
@@ -153,13 +152,14 @@ func readBytes(rdr io.Reader, count uint64) error {
 }
 
 //Upstream measures upstream bandwidth in bps
-func (ts *Testserver) Upstream() (uint64, error) {
+func (ts *Testserver) Upstream(duration int) (uint64, error) {
 	var currBps uint64
 	sz := startBlockSize
 	conn, err := net.DialTimeout("tcp", ts.Host, speedTestTimeout)
 	if err != nil {
 		return 0, err
 	}
+	targetTestDuration := time.Second * time.Duration(duration)
 	defer conn.Close()
 
 	//we repeat the tests until we have a test that lasts at least N seconds
@@ -202,7 +202,7 @@ func (ts *Testserver) Upstream() (uint64, error) {
 }
 
 //Downstream measures upstream bandwidth in bps
-func (ts *Testserver) Downstream() (uint64, error) {
+func (ts *Testserver) Downstream(duration int) (uint64, error) {
 	var currBps uint64
 	sz := startBlockSize
 	conn, err := net.DialTimeout("tcp", ts.Host, speedTestTimeout)
@@ -211,6 +211,7 @@ func (ts *Testserver) Downstream() (uint64, error) {
 	}
 	defer conn.Close()
 
+	targetTestDuration := time.Second * time.Duration(duration)
 	//we repeat the tests until we have a test that lasts at least N seconds
 	for i := 0; i < maxDownstreamTestCount; i++ {
 		//request a download of size sz and set a deadline
