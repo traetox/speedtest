@@ -13,6 +13,7 @@ import (
 
 const (
 	maxDownstreamTestCount = 4
+	maxTransferSize        = 8 * 1024 * 1024
 	pingTimeout            = time.Second * 5
 	speedTestTimeout       = time.Second * 10
 	cmdTimeout             = time.Second
@@ -189,12 +190,15 @@ func (ts *Testserver) Upstream(duration int) (uint64, error) {
 		//check if our test was a reasonable timespan
 		dur := time.Since(ts)
 		currBps = bps(sz, dur)
-		if dur.Nanoseconds() > targetTestDuration.Nanoseconds() {
+		if dur.Nanoseconds() > targetTestDuration.Nanoseconds() || sz == maxTransferSize {
 			_, err = fmt.Fprintf(conn, "QUIT\n")
 			return bps(sz, dur), err
 		}
 		//test was too short, try again
 		sz = calcNextSize(sz, dur)
+		if sz > maxTransferSize {
+			sz = maxTransferSize
+		}
 	}
 
 	_, err = fmt.Fprintf(conn, "QUIT\n")
@@ -237,12 +241,15 @@ func (ts *Testserver) Downstream(duration int) (uint64, error) {
 		//check if our test was a reasonable timespan
 		dur := time.Since(ts)
 		currBps = bps(sz, dur)
-		if dur.Nanoseconds() > targetTestDuration.Nanoseconds() {
+		if dur.Nanoseconds() > targetTestDuration.Nanoseconds() || sz == maxTransferSize {
 			_, err = fmt.Fprintf(conn, "QUIT\n")
 			return bps(sz, dur), err
 		}
 		//test was too short, try again
 		sz = calcNextSize(sz, dur)
+		if sz > maxTransferSize {
+			sz = maxTransferSize
+		}
 	}
 
 	_, err = fmt.Fprintf(conn, "QUIT\n")
