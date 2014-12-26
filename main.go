@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -103,7 +104,12 @@ func main() {
 			continue
 		}
 		if err = fullTest(testServers[id]); err != nil {
-			fmt.Fprintf(os.Stderr, "bandwidth test failed: %v\n", err)
+			if err == io.EOF {
+				fmt.Fprintf(os.Stderr, "Error, the remote server kicked us.\n")
+				fmt.Fprintf(os.Stderr, "Maximum request size may have changed\n")
+			} else {
+				fmt.Fprintf(os.Stderr, "Test failed with unknown error: %v\n", err)
+			}
 			os.Exit(-1)
 		} else {
 			break //we are done
