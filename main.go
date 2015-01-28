@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -25,6 +26,7 @@ const (
 
 var (
 	speedtestDuration = flag.Int("t", 3, "Target duration for speedtests (in seconds)")
+	search = flag.String("s", "", "Server name substring to search candidate servers")
 )
 
 func init() {
@@ -45,40 +47,39 @@ func main() {
 		fmt.Printf("No acceptable servers found\n")
 		return
 	}
-	//get the first 5 closest servers
-	testServers := []stdn.Testserver{}
-	failures := 0
-	fmt.Printf("Gathering server list and testing...\n")
-	for i := range cfg.Servers {
-		if failures >= maxFailureCount {
-			if len(testServers) > 0 {
-				break
-			}
-			fmt.Fprintf(os.Stderr, "Failed to perform latency test\n")
+	var headers []string
+	var data [][]string
+	var testServers []stdn.Testserver
+	if *search == "" {
+		fmt.Printf("Gathering server list and testing...\n")
+		if testServers, err = autoGetTestServers(cfg); err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
 			os.Exit(-1)
 		}
-		if len(testServers) >= initialTestCount {
-			break
+		fmt.Printf("%d Closest responding servers:\n", len(testServers))
+		for i := range testServers {
+			data = append(data, []string{fmt.Sprintf("%d", i),
+				testServers[i].Name, testServers[i].Sponsor,
+				fmt.Sprintf("%.02f", testServers[i].Distance),
+				fmt.Sprintf("%s", testServers[i].Latency)})
 		}
-		//get a latency from the server, the last latency will also be store in the
-		//server structure
-		if _, err := cfg.Servers[i].MedianPing(basePingCount); err != nil {
-			failures++
-			continue
+		headers = []string{"ID", "Name", "Sponsor", "Distance (km)", "Latency (ms)"}
+	} else {
+		if testServers, err = getSearchServers(cfg, *search); err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			os.Exit(-1)
 		}
-		testServers = append(testServers, cfg.Servers[i])
-	}
+		headers = []string{"ID", "Name", "Sponsor", "Distance (km)"}
+		fmt.Printf("%d Matching servers:\n", len(testServers))
+		for i := range testServers {
+			data = append(data, []string{fmt.Sprintf("%d", i),
+				testServers[i].Name, testServers[i].Sponsor,
+				fmt.Sprintf("%.02f", testServers[i].Distance)})
+		}
 
-	fmt.Printf("%d Closest responding servers:\n", len(testServers))
-	data := [][]string{}
-	for i := range testServers {
-		data = append(data, []string{fmt.Sprintf("%d", i),
-			testServers[i].Name, testServers[i].Sponsor,
-			fmt.Sprintf("%.02f", testServers[i].Distance),
-			fmt.Sprintf("%s", testServers[i].Latency)})
 	}
 	t := gotabulate.Create(data)
-	t.SetHeaders([]string{"ID", "Name", "Sponsor", "Distance (km)", "Latency (ms)"})
+	t.SetHeaders(headers)
 	t.SetWrapStrings(false)
 	fmt.Printf("%s", t.Render(tableFormat))
 	fmt.Printf("Enter server ID for bandwidth test, or \"quit\" to exit\n")
@@ -90,6 +91,9 @@ func main() {
 		}
 		//be REALLY forgiving on exit logic
 		if strings.HasPrefix(strings.ToLower(s), "exit") {
+			os.Exit(0)
+		}
+		if strings.HasPrefix(strings.ToLower(s), "quit") {
 			os.Exit(0)
 		}
 
@@ -173,3 +177,44 @@ func fullTest(server stdn.Testserver) error {
 	}
 	return nil
 }
+
+func autoGetTestServers(cfg *stdn.Config) ([]stdn.Testserver, error) {
+	//get the first 5 closest servers
+	testServers := []stdn.Testserver{}
+	failures := 0
+	for i := range cfg.Servers {
+		if failures >= maxFailureCount {
+			if len(testServers) > 0 {
+				return testServers, nil
+			}
+			return nil, fmt.Errorf("Failed to perform latency test on closest servers\n")
+		}
+		if len(testServers) >= initialTestCount {
+			return testServers, nil
+		}
+		//get a latency from the server, the last latency will also be store in the
+		//server structure
+		if _, err := cfg.Servers[i].MedianPing(basePingCount); err != nil {
+			failures++
+			continue
+		}
+		testServers = append(testServers, cfg.Servers[i])
+	}
+	return testServers, nil
+}
+
+func getSearchServers(cfg *stdn.Config, query string) ([]stdn.Testserver, error) {
+	//get the first 5 closest servers
+	testServers := []stdn.Testserver{}
+	for i := range cfg.Servers {
+		if strings.Contains(strings.ToLower(cfg.Servers[i].Name), strings.ToLower(query)) {
+			testServers = append(testServers, cfg.Servers[i])
+		}
+	}
+	if len(testServers) == 0 {
+		return nil, errors.New("no servers found")
+	}
+	return testServers, nil
+}
+
+
