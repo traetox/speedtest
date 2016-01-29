@@ -26,7 +26,7 @@ const (
 
 var (
 	speedtestDuration = flag.Int("t", 3, "Target duration for speedtests (in seconds)")
-	search = flag.String("s", "", "Server name substring to search candidate servers")
+	search            = flag.String("s", "", "Server name substring to search candidate servers")
 )
 
 func init() {
@@ -40,7 +40,7 @@ func init() {
 func main() {
 	cfg, err := stdn.GetConfig()
 	if err != nil {
-		fmt.Printf("ERROR: %v\n", err)
+		fmt.Printf("Failed to get server list configuration: %v\n", err)
 		return
 	}
 	if len(cfg.Servers) <= 0 {
@@ -216,5 +216,3 @@ func getSearchServers(cfg *stdn.Config, query string) ([]stdn.Testserver, error)
 	}
 	return testServers, nil
 }
-
-

@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	serversConfigUrl string        = `http://www.speedtest.net/speedtest-servers-static.php`
-	clientConfigUrl  string        = `http://www.speedtest.net/speedtest-config.php`
+	serversConfigUrl string        = `http://www.speedtest.net/speedtest-servers-static.php?x=whysosad`
+	clientConfigUrl  string        = `http://www.speedtest.net/speedtest-config.php?x=whysosad`
 	getTimeout       time.Duration = 2 * time.Second
 )
 
@@ -95,6 +95,7 @@ func GetServerList() ([]server, error) {
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:40.0) Gecko/20100101 Firefox/40.1")
 	resp, err := clnt.Do(req)
 	if err != nil {
 		return nil, err
