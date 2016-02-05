@@ -42,11 +42,11 @@ func main() {
 	cfg, err := stdn.GetConfig()
 	if err != nil {
 		fmt.Printf("Failed to get server list configuration: %v\n", err)
-		return
+		os.Exit(-1)
 	}
 	if len(cfg.Servers) <= 0 {
 		fmt.Printf("No acceptable servers found\n")
-		return
+		os.Exit(-1)
 	}
 	var headers []string
 	var data [][]string
