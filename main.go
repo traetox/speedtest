@@ -27,6 +27,7 @@ const (
 var (
 	speedtestDuration = flag.Int("t", 3, "Target duration for speedtests (in seconds)")
 	search            = flag.String("s", "", "Server name substring to search candidate servers")
+	auto              = flag.Bool("a", false, "Auto-select nearest candidate server")
 )
 
 func init() {
@@ -82,42 +83,61 @@ func main() {
 	t.SetHeaders(headers)
 	t.SetWrapStrings(false)
 	fmt.Printf("%s", t.Render(tableFormat))
-	fmt.Printf("Enter server ID for bandwidth test, or \"quit\" to exit\n")
-	for {
-		s, err := prompt.Basic("ID> ", true)
-		if err != nil {
-			fmt.Printf("input failure \"%v\"\n", err)
-			os.Exit(-1)
-		}
-		//be REALLY forgiving on exit logic
-		if strings.HasPrefix(strings.ToLower(s), "exit") {
-			os.Exit(0)
-		}
-		if strings.HasPrefix(strings.ToLower(s), "quit") {
-			os.Exit(0)
-		}
 
-		//try to convert the string to a number
-		id, err := strconv.ParseUint(s, 10, 64)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "\"%s\" is not a valid id\n", s)
-			continue
-		}
-		if id > uint64(len(testServers)) {
-			fmt.Fprintf(os.Stderr, "No server with ID \"%d\" available\n", id)
-			continue
-		}
-		if err = fullTest(testServers[id]); err != nil {
-			if err == io.EOF {
-				fmt.Fprintf(os.Stderr, "Error, the remote server kicked us.\n")
-				fmt.Fprintf(os.Stderr, "Maximum request size may have changed\n")
-			} else {
-				fmt.Fprintf(os.Stderr, "Test failed with unknown error: %v\n", err)
-			}
-			os.Exit(-1)
+	// Define server variable to be used for either auto-selection or manual selection
+	var selServer stdn.Testserver
+
+	if *auto {
+		// Double check the existence of a server again to avoid out-of bound panic
+		if len(testServers) > 0 {
+			selServer = testServers[0]
 		} else {
-			break //we are done
+			fmt.Println("No servers found")
+			os.Exit(-1)
 		}
+		fmt.Printf("\nAuto-selecting closest server for bandwidth test: %s / %s\n", selServer.Name, selServer.Sponsor)
+	} else {
+		fmt.Printf("Enter server ID for bandwidth test, or \"quit\" to exit\n")
+		for {
+			s, err := prompt.Basic("ID> ", true)
+			if err != nil {
+				fmt.Printf("input failure \"%v\"\n", err)
+				os.Exit(-1)
+			}
+			//be REALLY forgiving on exit logic
+			if strings.HasPrefix(strings.ToLower(s), "exit") {
+				os.Exit(0)
+			}
+			if strings.HasPrefix(strings.ToLower(s), "quit") {
+				os.Exit(0)
+			}
+
+			//try to convert the string to a number
+			id, err := strconv.ParseUint(s, 10, 64)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "\"%s\" is not a valid id\n", s)
+				continue
+			}
+			if id > uint64(len(testServers)) {
+				fmt.Fprintf(os.Stderr, "No server with ID \"%d\" available\n", id)
+				continue
+			}
+
+			// We are done, set ID accordingly
+			selServer = testServers[id]
+			break
+		}
+	}
+
+	// Perform the actual test
+	if err = fullTest(selServer); err != nil {
+		if err == io.EOF {
+			fmt.Fprintf(os.Stderr, "Error, the remote server kicked us.\n")
+			fmt.Fprintf(os.Stderr, "Maximum request size may have changed\n")
+		} else {
+			fmt.Fprintf(os.Stderr, "Test failed with unknown error: %v\n", err)
+		}
+		os.Exit(-1)
 	}
 }
 
