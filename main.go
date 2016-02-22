@@ -12,8 +12,8 @@ import (
 	"github.com/Bowery/prompt"
 	"github.com/bndr/gotabulate"
 	"github.com/joliv/spark"
-	stdn "github.com/traetox/speedtest/speedtestdotnet"
-	//stdn "./speedtestdotnet" //for testing
+	//stdn "github.com/traetox/speedtest/speedtestdotnet"
+	stdn "./speedtestdotnet" //for testing
 )
 
 const (
@@ -131,10 +131,13 @@ func main() {
 
 	// Perform the actual test
 	if err = fullTest(selServer); err != nil {
-		if err == io.EOF {
+		switch err {
+		case io.EOF:
 			fmt.Fprintf(os.Stderr, "Error, the remote server kicked us.\n")
 			fmt.Fprintf(os.Stderr, "Maximum request size may have changed\n")
-		} else {
+		case stdn.ErrTimeout:
+			fmt.Fprintf(os.Stderr, "Test failed due to connection timeout.  The server may be down, or rejecting us")
+		default:
 			fmt.Fprintf(os.Stderr, "Test failed with unknown error: %v\n", err)
 		}
 		os.Exit(-1)

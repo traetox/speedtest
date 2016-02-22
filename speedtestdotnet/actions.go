@@ -27,6 +27,8 @@ var (
 	errDontBeADick           = errors.New("requested ping count too high")
 	startBlockSize           = uint64(4096) //4KB
 	dataBlock                []byte
+
+	ErrTimeout = errors.New("Timeout")
 )
 
 func init() {
@@ -47,7 +49,7 @@ func (ts *Testserver) ping(count int) ([]time.Duration, error) {
 	//establish connection to the host
 	conn, err := net.DialTimeout("tcp", ts.Host, pingTimeout)
 	if err != nil {
-		return errRet, errors.New("Failed to ping, server may be down")
+		return errRet, ErrTimeout
 	}
 	defer conn.Close()
 
@@ -158,7 +160,7 @@ func (ts *Testserver) Upstream(duration int) (uint64, error) {
 	sz := startBlockSize
 	conn, err := net.DialTimeout("tcp", ts.Host, speedTestTimeout)
 	if err != nil {
-		return 0, errors.New("Failed to test upstream, server may be down")
+		return 0, ErrTimeout
 	}
 	targetTestDuration := time.Second * time.Duration(duration)
 	defer conn.Close()
@@ -211,7 +213,7 @@ func (ts *Testserver) Downstream(duration int) (uint64, error) {
 	sz := startBlockSize
 	conn, err := net.DialTimeout("tcp", ts.Host, speedTestTimeout)
 	if err != nil {
-		return 0, errors.New("Failed to test downstream, server may be down")
+		return 0, ErrTimeout
 	}
 	defer conn.Close()
 
