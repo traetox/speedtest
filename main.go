@@ -12,8 +12,8 @@ import (
 	"github.com/Bowery/prompt"
 	"github.com/bndr/gotabulate"
 	"github.com/joliv/spark"
-	//stdn "github.com/traetox/speedtest/speedtestdotnet"
-	stdn "./speedtestdotnet" //for testing
+	stdn "github.com/traetox/speedtest/speedtestdotnet"
+	//stdn "./speedtestdotnet" //for testing
 )
 
 const (
