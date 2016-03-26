@@ -29,7 +29,8 @@ DIR = $(shell pwd)
 GO = go
 GLIDE = glide
 
-GOX = gox -os="linux darwin windows freebsd openbsd netbsd"
+# GOX = gox -os="linux darwin windows freebsd openbsd netbsd"
+GOX = gox -os="linux darwin windows"
 
 NO_COLOR=\033[0m
 OK_COLOR=\033[32;01m
@@ -109,6 +110,7 @@ errcheck:
 coverage:
 	@$(foreach pkg,$(PKGS),$(GO) test -cover $(pkg) $(glide novendor) || exit;)
 
-gox:
+.PHONY: binaries
+binaries:
 	@echo -e "$(OK_COLOR)[$(APP)] Create binaries $(NO_COLOR)"
 	$(GOX) github.com/traetox/speedtest
