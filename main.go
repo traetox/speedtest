@@ -36,6 +36,7 @@ import (
 	"github.com/joliv/spark"
 
 	stdn "github.com/traetox/speedtest/speedtestdotnet"
+	"github.com/traetox/speedtest/version"
 	//stdn "./speedtestdotnet" //for testing
 )
 
@@ -51,10 +52,17 @@ var (
 	speedtestDuration = flag.Int("t", 3, "Target duration for speedtests (in seconds)")
 	search            = flag.String("s", "", "Server name substring to search candidate servers")
 	auto              = flag.Bool("a", false, "Auto-select nearest candidate server")
+	vrs               bool
 )
 
 func init() {
+	flag.BoolVar(&vrs, "version", false, "print version and exit")
+	flag.BoolVar(&vrs, "v", false, "print version and exit (shorthand)")
 	flag.Parse()
+	if vrs {
+		fmt.Printf("Speedtest v%s\n", version.Version)
+		os.Exit(0)
+	}
 	if *speedtestDuration <= 0 {
 		fmt.Fprintf(os.Stderr, "Invalid test duration")
 		os.Exit(-1)
