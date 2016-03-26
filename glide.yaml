@@ -1,0 +1,6 @@
+package: github.com/traetox/speedtest
+import:
+- package: github.com/Bowery/prompt
+- package: github.com/bndr/gotabulate
+- package: github.com/joliv/spark
+- package: github.com/kellydunn/golang-geo
