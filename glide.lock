@@ -1,0 +1,12 @@
+hash: a5a0a87704a25a23775739b71c6995bf3f19ecb994cac35d6911662d038236aa
+updated: 2016-03-26T18:58:49.677947521+01:00
+imports:
+- name: github.com/bndr/gotabulate
+  version: a1f2a699a4b825786acb4e395f9f2f6893b102b7
+- name: github.com/Bowery/prompt
+  version: 3a76720709401fd06e29c3105c51f18b9f001108
+- name: github.com/joliv/spark
+  version: 2d625891bea13083312494f03e686dde519d3f5a
+- name: github.com/kellydunn/golang-geo
+  version: 6f16b0ccf2a6ebd1a234daacfb6199510fbd0db4
+devImports: []
