@@ -26,13 +26,18 @@ import (
 	"fmt"
 )
 
-var (
+const (
 	bits        = 8
-	kb          = uint64(1024)
+	kb          = 1024
 	mb          = 1024 * kb
 	gb          = 1024 * mb
 	tb          = 1024 * gb
 	pb          = 1024 * tb
+	KB          = 1024 * bits
+	MB          = 1024 * KB
+	GB          = 1024 * MB
+	TB          = 1024 * GB
+	PB          = 1024 * TB
 	tooDamnFast = "Too fast to test"
 )
 
@@ -40,13 +45,13 @@ func HumanSpeed(bps uint64) string {
 	if bps > pb {
 		return tooDamnFast
 	} else if bps > tb {
-		return fmt.Sprintf("%.02f Tb/s", float64(bps)/float64(tb))
+		return fmt.Sprintf("%.02f Tbits/s %.02f TBytes/s", float64(bps)/float64(tb), float64(bps)/float64(TB))
 	} else if bps > gb {
-		return fmt.Sprintf("%.02f Gb/s", float64(bps)/float64(gb))
+		return fmt.Sprintf("%.02f Gbits/s %.02f GBytes/s", float64(bps)/float64(gb), float64(bps)/float64(GB))
 	} else if bps > mb {
-		return fmt.Sprintf("%.02f Mb/s", float64(bps)/float64(mb))
+		return fmt.Sprintf("%.02f Mbit/s %.02f MBytes/s", float64(bps)/float64(mb), float64(bps)/float64(MB))
 	} else if bps > kb {
-		return fmt.Sprintf("%.02f Kb/s", float64(bps)/float64(kb))
+		return fmt.Sprintf("%.02f Kbits/s  %.02f KBytes/s", float64(bps)/float64(kb), float64(bps)/float64(KB))
 	}
 	return fmt.Sprintf("%d bps", bps)
 }
