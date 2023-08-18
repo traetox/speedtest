@@ -52,6 +52,7 @@ var (
 	speedtestDuration = flag.Int("t", 3, "Target duration for speedtests (in seconds)")
 	search            = flag.String("s", "", "Server name substring to search candidate servers")
 	auto              = flag.Bool("a", false, "Auto-select nearest candidate server")
+	interface_id      = flag.String("I", "", "Select which interface you would like to run the speed test on")
 	vrs               bool
 )
 
@@ -202,7 +203,7 @@ func testLatency(server stdn.Testserver) error {
 }
 
 func testDownstream(server stdn.Testserver) error {
-	bps, err := server.Downstream(*speedtestDuration)
+	bps, err := server.Downstream(*speedtestDuration, *interface_id)
 	if err != nil {
 		return err
 	}
@@ -211,7 +212,7 @@ func testDownstream(server stdn.Testserver) error {
 }
 
 func testUpstream(server stdn.Testserver) error {
-	bps, err := server.Upstream(*speedtestDuration)
+	bps, err := server.Upstream(*speedtestDuration, *interface_id)
 	if err != nil {
 		return err
 	}

@@ -178,12 +178,38 @@ func readBytes(rdr io.Reader, count uint64) error {
 }
 
 // Upstream measures upstream bandwidth in bps
-func (ts *Testserver) Upstream(duration int) (uint64, error) {
+func (ts *Testserver) Upstream(duration int, interface_id string) (uint64, error) {
 	var currBps uint64
 	sz := startBlockSize
-	conn, err := net.DialTimeout("tcp", ts.Host, speedTestTimeout)
+	var localAddr *net.TCPAddr
+	if interface_id != `` {
+		// if a source interface is specified, resolve it and set the localAddr for the dialer
+		intf, err := net.InterfaceByName(interface_id)
+		if err != nil {
+			return 0, err
+		}
+
+		addrs, err := intf.Addrs()
+		if err != nil {
+			return 0, err
+		}
+
+		// Create a TCP address using the IP address of the interface
+		localAddr = &net.TCPAddr{
+			IP: addrs[0].(*net.IPNet).IP,
+		}
+	}
+
+	// Create a Dialer with LocalAddr set to the IP address of the interface
+	dialer := net.Dialer{
+		LocalAddr: localAddr,
+		Timeout:   speedTestTimeout,
+	}
+
+	// Establish a connection to the speed test server
+	conn, err := dialer.Dial("tcp", ts.Host)
 	if err != nil {
-		return 0, ErrTimeout
+		return 0, err
 	}
 	targetTestDuration := time.Second * time.Duration(duration)
 	defer conn.Close()
@@ -231,12 +257,38 @@ func (ts *Testserver) Upstream(duration int) (uint64, error) {
 }
 
 // Downstream measures upstream bandwidth in bps
-func (ts *Testserver) Downstream(duration int) (uint64, error) {
+func (ts *Testserver) Downstream(duration int, interface_id string) (uint64, error) {
 	var currBps uint64
 	sz := startBlockSize
-	conn, err := net.DialTimeout("tcp", ts.Host, speedTestTimeout)
+	var localAddr *net.TCPAddr
+	if interface_id != `` {
+		// if a source interface is specified, resolve it and set the localAddr for the dialer
+		intf, err := net.InterfaceByName(interface_id)
+		if err != nil {
+			return 0, err
+		}
+
+		addrs, err := intf.Addrs()
+		if err != nil {
+			return 0, err
+		}
+
+		// Create a TCP address using the IP address of the interface
+		localAddr = &net.TCPAddr{
+			IP: addrs[0].(*net.IPNet).IP,
+		}
+	}
+
+	// Create a Dialer with LocalAddr set to the IP address of the interface
+	dialer := net.Dialer{
+		LocalAddr: localAddr,
+		Timeout:   speedTestTimeout,
+	}
+
+	// Establish a connection to the speed test server
+	conn, err := dialer.Dial("tcp", ts.Host)
 	if err != nil {
-		return 0, ErrTimeout
+		return 0, err
 	}
 	defer conn.Close()
 
