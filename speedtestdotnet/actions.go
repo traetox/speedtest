@@ -35,12 +35,13 @@ import (
 
 const (
 	maxDownstreamTestCount = 4
-	maxTransferSize        = 8 * 1024 * 1024
+	maxTransferSize        = 64 * 1024 * 1024
+	defaultTransferSize    = 16 * 1024 * 1024
 	pingTimeout            = time.Second * 5
 	speedTestTimeout       = time.Second * 10
 	cmdTimeout             = time.Second
 	latencyMaxTestCount    = 60
-	dataBlockSize          = 16 * 1024 //16KB
+	dataBlockSize          = 32 * 1024 //128KB
 )
 
 var (
@@ -105,7 +106,7 @@ func (ts *Testserver) ping(count int) ([]time.Duration, error) {
 	return durs, nil
 }
 
-//MedianPing runs a latency test against the server and stores the median latency
+// MedianPing runs a latency test against the server and stores the median latency
 func (ts *Testserver) MedianPing(count int) (time.Duration, error) {
 	var errRet time.Duration
 	durs, err := ts.ping(count)
@@ -117,12 +118,12 @@ func (ts *Testserver) MedianPing(count int) (time.Duration, error) {
 	return durs[count/2], nil
 }
 
-//Ping will run count number of latency tests and return the results of each
+// Ping will run count number of latency tests and return the results of each
 func (ts *Testserver) Ping(count int) ([]time.Duration, error) {
 	return ts.ping(count)
 }
 
-//throwBytes chucks bytes at the remote server then listens for a response
+// throwBytes chucks bytes at the remote server then listens for a response
 func throwBytes(conn io.ReadWriter, count uint64) error {
 	var writeBytes uint64
 	var b []byte
@@ -153,7 +154,7 @@ func throwBytes(conn io.ReadWriter, count uint64) error {
 	return nil
 }
 
-//readBytes reads until we get a newline or an error
+// readBytes reads until we get a newline or an error
 func readBytes(rdr io.Reader, count uint64) error {
 	var rBytes uint64
 	buff := make([]byte, 4096)
@@ -176,7 +177,7 @@ func readBytes(rdr io.Reader, count uint64) error {
 	return nil
 }
 
-//Upstream measures upstream bandwidth in bps
+// Upstream measures upstream bandwidth in bps
 func (ts *Testserver) Upstream(duration int) (uint64, error) {
 	var currBps uint64
 	sz := startBlockSize
@@ -214,7 +215,7 @@ func (ts *Testserver) Upstream(duration int) (uint64, error) {
 		//check if our test was a reasonable timespan
 		dur := time.Since(ts)
 		currBps = bps(sz, dur)
-		if dur.Nanoseconds() > targetTestDuration.Nanoseconds() || sz == maxTransferSize {
+		if dur.Nanoseconds() > targetTestDuration.Nanoseconds() || sz >= maxTransferSize {
 			_, err = fmt.Fprintf(conn, "QUIT\n")
 			return bps(sz, dur), err
 		}
@@ -229,7 +230,7 @@ func (ts *Testserver) Upstream(duration int) (uint64, error) {
 	return currBps, err
 }
 
-//Downstream measures upstream bandwidth in bps
+// Downstream measures upstream bandwidth in bps
 func (ts *Testserver) Downstream(duration int) (uint64, error) {
 	var currBps uint64
 	sz := startBlockSize
@@ -265,7 +266,7 @@ func (ts *Testserver) Downstream(duration int) (uint64, error) {
 		//check if our test was a reasonable timespan
 		dur := time.Since(ts)
 		currBps = bps(sz, dur)
-		if dur.Nanoseconds() > targetTestDuration.Nanoseconds() || sz == maxTransferSize {
+		if dur.Nanoseconds() > targetTestDuration.Nanoseconds() || sz >= maxTransferSize {
 			_, err = fmt.Fprintf(conn, "QUIT\n")
 			return bps(sz, dur), err
 		}
@@ -280,8 +281,8 @@ func (ts *Testserver) Downstream(duration int) (uint64, error) {
 	return currBps, err
 }
 
-//calcNextSize takes the current preformance metrics and
-//attempts to calculate what the next size should be
+// calcNextSize takes the current preformance metrics and
+// attempts to calculate what the next size should be
 func calcNextSize(b uint64, dur time.Duration) uint64 {
 	if b == 0 {
 		return startBlockSize
@@ -290,7 +291,7 @@ func calcNextSize(b uint64, dur time.Duration) uint64 {
 	return (b * uint64(target.Nanoseconds())) / uint64(dur.Nanoseconds())
 }
 
-//take the byte count and duration and calcuate a bits per second
+// take the byte count and duration and calcuate a bits per second
 func bps(byteCount uint64, dur time.Duration) uint64 {
 	bits := byteCount * 8
 	return uint64((bits * 1000000000) / uint64(dur.Nanoseconds()))

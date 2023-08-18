@@ -107,7 +107,7 @@ type settings struct {
 	Servers []server `xml:"servers>server"`
 }
 
-//GetServerList returns a list of servers in the native speedtest.net structure
+// GetServerList returns a list of servers in the native speedtest.net structure
 func GetServerList() ([]server, error) {
 	//get a list of servers
 	clnt := http.Client{
@@ -138,7 +138,7 @@ func GetServerList() ([]server, error) {
 	return sts.Servers, nil
 }
 
-//GetConfig returns a configuration containing information about our client and a list of acceptable servers sorted by distance
+// GetConfig returns a configuration containing information about our client and a list of acceptable servers sorted by distance
 func GetConfig() (*Config, error) {
 	//get a client configuration
 	clnt := http.Client{
